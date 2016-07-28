@@ -4,6 +4,7 @@ var Twit = require('twit')
 var accelaConfig = require('./accela-config');
 var twitterConfig = require('./twitter-config');
 
+console.log(Date());
 var Bot = new Twit(twitterConfig);
 
 // http request option to get access token from Accela API
@@ -21,7 +22,7 @@ var oauthOptions = {
 
 // make the request to Accela API using the options above
 request(oauthOptions, function (error, response, body) {
-  if (error) throw new Error(error);
+  if (error) console.error('error getting access token', error);
 
   // get the access token needed to make future calls to Accela API
   var accela_token = body.access_token;
@@ -50,8 +51,7 @@ request(oauthOptions, function (error, response, body) {
 
   // make the actual search request
   request(searchOptions, function (error, response, body) {
-    if (error) throw new Error(error);
-
+    if (error) console.error('error making search', error);
 
     for (var i = 0; i < body.result.length; i++) {
       var record = body.result[i];
@@ -65,7 +65,7 @@ request(oauthOptions, function (error, response, body) {
       console.log(status);
 
       // don't tweet all the result at once by creating a time delay
-      staggerTweet(status, i * 1000 * 60 * 3);
+      staggerTweet(status, i * 1000 * 60 * 5);
     }
   });
 });
@@ -74,10 +74,10 @@ function staggerTweet(status, delay) {
   setTimeout(function() { createTweet(status) }, delay);
 }
 
-
 function createTweet(status) {
   // post tweet to Twitter account created with config file
   Bot.post('statuses/update', { status: status }, function(err, data, response) {
-    console.log(data)
+    if (err) console.error('error creating tweet', err);
+    else console.log('done tweeting');
   });
 }
